@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Beat Tracker · Library</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="page-header">
+    <h1>La Mia Library</h1>
+  </header>
+
+  <!-- Griglia di card -->
+  <main id="library-grid" class="card-grid">
+    <!-- JavaScript popolerà le card qui -->
+  </main>
+
+  <!-- Player persistente -->
+  <footer id="audio-bar" class="hidden">
+    <div id="now-playing">—</div>
+    <button id="play-pause">▶</button>
+    <input id="seek" type="range" value="0" min="0" max="100">
+    <span id="timer">0:00</span>
+    <audio id="audio"></audio>
+  </footer>
+
+  <!-- Bottom Nav -->
+  <nav id="bottom-nav">
+    <button id="home-btn-lib">🏠</button>
+    <button id="add-btn-lib">＋</button>
+    <button id="library-btn-lib" disabled>📚</button>
+  </nav>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script>
+    window.SUPABASE_URL      = 'https://cbdfohvkllpidwigjykd.supabase.co';
+  window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
+    window.supabase = supabase.createClient(
+      window.SUPABASE_URL,
+      window.SUPABASE_ANON_KEY
+    );
+  </script>
+  <!-- Il tuo JS per la library -->
+  <script src="library.js"></script>
+</body>
+</html>
