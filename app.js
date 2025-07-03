@@ -38,7 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const thisWeek = beats.filter(b => new Date(b.date) >= monday);
         const count = thisWeek.length;
         const pct = Math.min(100, Math.round((count / 20) * 100));
-        counterEl.textContent = `${count}/20`;
+    counterEl.innerHTML = `
+  <span class="count">${count}</span>
+  <span class="slash" style="font-weight:100;">/</span>
+  <span class="total">20</span>
+  <p style="font-family: Inter; font-size:12px; letter-spacing:0px; margin-bottom: 16px;">Beat/Sample Completati</p>
+`;
         progressEl.style.width = pct + '%';
         summaryEl.textContent = `${pct}% Done — Ti rimangono ${Math.max(0, 7 - count)} giorni`;
     }
@@ -54,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
     li.innerHTML = `
       <button class="play-btn">▶</button>
       <div class="info">
-        <strong>${b.name}</strong> 
-        <small>${b.bpm} bpm · ★${b.rating} · ${b.tag}</small><br>
-        <small>${new Date(b.date).toLocaleDateString()}</small>
+        <strong>${b.name}</strong>
+        <small>★${b.rating} · ${b.tag} · ${new Date(b.date).toLocaleDateString()}</small>
+  
       </div>
     `;
 

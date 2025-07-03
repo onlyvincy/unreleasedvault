@@ -1,15 +1,34 @@
 @font-face {
+  font-family: 'TuskerLight';
+  src: url('./fonts/TuskerGrotesk-1500Medium.ttf') format('truetype');
+  font-weight: medium;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Tusker';
-  src: url('./fonts/TuskerGrotesk-6700Bold.ttf') format('truetype');
+  src: url('./fonts/TuskerGrotesk-5500Medium.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TuskerMedium';
+  src: url('./fonts/TuskerGrotesk-2500Medium.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
 
 
+
+
+
 html{
   height:100vh;
-  font-family: Roboto
+  font-family: Inter
 }
 /* → Reset base */
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -17,6 +36,7 @@ html{
 /* → Body & Sections */
 body {
   font-family: Inter;
+  letter-spacing: -0.3px;
   background: #0a0a0a;
   color: #fff;
   display: flex;
@@ -34,14 +54,15 @@ section { padding: 1rem; }
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap:8px;
-  padding:32px;
+  gap:0;
+  padding:48px;
   box-shadow: 0 4px 250px rgba(255, 0, 0, 0.2);
 }
 #counter {
   font-family: Tusker;
   font-size: 121px;
   margin: 0rem;
+  letter-spacing: -4px;
 
 }
 .progress-bar {
@@ -59,16 +80,16 @@ section { padding: 1rem; }
 }
 #summary {
   margin-top: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 12px;
 }
 
 /* → Recent list */
-#recent h2 { margin-bottom: 1rem; }
+#recent h2 { margin-bottom: 16px; font-size: 16px; font-weight: 300; margin-left: 12px;}
 #beat-list {
   list-style: none;
 }
 #beat-list li {
-  background: #000000;
+  background: #05050542;
   padding: 0.8rem;
   margin-bottom: 8px;
   border-radius: 0.5rem;
@@ -256,7 +277,7 @@ section { padding: 1rem; }
   height:32px;
   width:32px;
   border-radius:256px;
-  background-color: #e70ca5 !important;
+  background-color: #a11313 !important;
   color:white;
   font-weight: bold;
   border: 0;
@@ -274,7 +295,7 @@ input[type=range] {
 /* 2) Colore del track */
 input[type=range]::-webkit-slider-runnable-track {
   height: 6px;               /* spessore a piacere */
-  background: #e70ca5;       /* il tuo colore */
+  background: #ffffff;       /* il tuo colore */
   border-radius: 3px;
 }
 
@@ -285,7 +306,7 @@ input[type=range]::-webkit-slider-thumb {
   width: 16px;               /* dimensione a piacere */
   height: 16px;
   background: #fff;          /* colore del pallino */
-  border: 2px solid #e70ca5; /* bordo che richiama il track */
+  border: 2px solid #ffffff; /* bordo che richiama il track */
   border-radius: 50%;
   margin-top: -5px;          /* centra verticalmente: -(thumbHeight - trackHeight)/2 */
   cursor: pointer;
@@ -308,11 +329,11 @@ i {
 }
 
 .fa-vault {
-  color: #ffffff; 
+  color: #919191; 
 }
 
 .fa-house {
-  color:#e70ca5;
+  color:#ffffff;
 
 }
 
@@ -346,3 +367,20 @@ i {
 
 #progress {
   background: #ffffff; }
+
+
+  .slash {
+    font-family: TuskerLight;
+    margin: 0 -12px;
+  }
+
+
+  strong {
+    font-weight:bolder;
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap:8px;
+  }
