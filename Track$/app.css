@@ -1,0 +1,222 @@
+html{
+  height:100vh;
+}
+/* → Reset base */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* → Body & Sections */
+body {
+  font-family: sans-serif;
+  background: #0a0a0a;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
+}
+section { padding: 1rem; }
+
+/* → Dashboard */
+#dashboard {
+  background: linear-gradient(135deg, #2a002a, #000);
+  border-bottom-left-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  text-align: center;
+}
+#counter {
+  font-size: 5rem;
+  margin: 0.5rem 0;
+}
+.progress-bar {
+  background: #333;
+  width: 80%;
+  height: 0.8rem;
+  margin: 0.5rem auto;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+#progress {
+  background: #d9009c;
+  width: 0%;
+  height: 100%;
+}
+#summary {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* → Recent list */
+#recent h2 { margin-bottom: 0.5rem; }
+#beat-list {
+  list-style: none;
+}
+#beat-list li {
+  background: #1e1e1e;
+  padding: 0.8rem;
+  margin-bottom: 0.4rem;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+#beat-list li .info { flex:1; }
+#beat-list li .bpm { margin-left: 1rem; }
+
+/* → Bottom Navbar */
+#bottom-nav {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-around;
+  background: #111;
+  padding: 0.5rem 0;
+  position: fixed;
+  width:100%;
+  bottom:0;
+}
+#bottom-nav button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+/* → Modal */
+.hidden { display: none !important; }
+#modal {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#modal-content {
+  background: #1e1e1e;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+#close-modal {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+}
+#beat-form input,
+#beat-form textarea {
+  width: 100%;
+  margin-bottom: 0.8rem;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 0.4rem;
+}
+#beat-form button {
+  width: 100%;
+  padding: 0.8rem;
+  background: #d9009c;
+  border: none;
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+#audio-bar {
+  position: fixed; bottom: 64px; left: 0; right: 0;
+  background:#1e1e1e; color:#fff; padding:.5rem .8rem;
+  display:flex; gap:.6rem; align-items:center;
+}
+#audio-bar.hidden { display:flex; }
+#seek { flex:1; }
+#play-pause { font-size:1.2rem; }
+
+
+/* → Library */
+/* Layout a griglia di card */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Stile base delle card */
+.card {
+  background: #1e1e1e;
+  border-radius: .75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* Titolo e metadati nella card */
+.card h2 {
+  font-size: 1.1rem;
+  margin-bottom: .5rem;
+  color: #fff;
+}
+.card .meta {
+  font-size: .85rem;
+  color: #aaa;
+  margin-bottom: .75rem;
+}
+
+/* Bottone Play nella card */
+.card button.play-card {
+  background: #4caf50;
+  border: none;
+  border-radius: .5rem;
+  padding: .6rem;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Player persistente */
+#audio-bar {
+  position: fixed;
+  bottom: 40px; left: 0; right: 0;
+  background: #121212;
+  color: #fff;
+  padding: .6rem .8rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .9rem;
+}
+#audio-bar.hidden { display: none; }
+#play-pause {
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+#seek { flex: 1; }
+
+/* Header e nav */
+.page-header {
+  padding: 1rem;
+  background: #121212;
+  color: #fff;
+  text-align: center;
+}
+#bottom-nav {
+  position: fixed;
+  bottom: 0px; left: 0; right: 0;
+  background: #111;
+  display: flex;
+  justify-content: space-around;
+  padding: .5rem 0;
+}
+
+
+.play-btn{ /*nascondo quella merda di bottone che non serve a niente */
+  display:none !important;
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Beat Tracker</title>
+    <link rel="stylesheet" href="app.css" />
+</head>
+
+<body>
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+        <h1>Weekly Goal 🎯</h1>
+        <div id="counter">0 / 20</div>
+        <div class="progress-bar">
+            <div id="progress"></div>
+        </div>
+        <div id="summary"></div>
+    </section>
+
+    <!-- RECENT LIST -->
+    <section id="recent">
+        <h2>Recent:</h2>
+        <ul id="beat-list"></ul>
+    </section>
+
+    <!-- BOTTOM NAVBAR -->
+    <nav id="bottom-nav">
+        <button id="home-btn">🏠</button>
+        <button id="add-btn">＋</button>
+        <button id="library-btn">🎸</button>
+    </nav>
+
+    <!-- MODAL ADD BEAT -->
+    <div id="modal" class="hidden">
+        <div id="modal-content">
+            <button id="close-modal">✕</button>
+            <h3>Aggiungi Beat</h3>
+            <form id="beat-form">
+                <input type="text" id="beat-name" placeholder="Titolo beat" required />
+                <input type="number" id="beat-bpm" placeholder="BPM" required />
+                <!-- aggiungi subito dopo il campo BPM -->
+                <label for="beat-rating">Rating</label>
+                <input type="number" id="beat-rating" name="beat-rating" min="1" max="5" value="3" required />
+
+                <label for="beat-tag">Tipo</label>
+                <select id="beat-tag" name="beat-tag" required>
+                    <option value="Beat">Beat</option>
+                    <option value="Sample">Sample</option>
+                </select>
+
+                <textarea id="beat-notes" placeholder="Note (opzionale)"></textarea>
+                <input type="file" id="beat-file" accept="audio/*" />
+                <button type="submit">ADD</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- GLOBAL AUDIO BAR (in fondo al body) -->
+    <footer id="audio-bar" class="">
+        <div id="now-playing">—</div>
+        <button id="play-pause">▶</button>
+        <input id="seek" type="range" value="0" min="0" max="100">
+        <span id="timer">0:00</span>
+        <audio id="audio"></audio>
+    </footer>
+
+    <!-- Supabase + app.js ... (tuo codice già esistente) -->
+
+
+    <!-- 1) Carica il bundle UMD di Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+    <!-- 2) Inizializza il client senza shadowing -->
+    <script>
+        window.SUPABASE_URL = 'https://cbdfohvkllpidwigjykd.supabase.co';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
+        // ❌ rimuovi qualsiasi "const supabase =" qui
+        // ✔ invece sovrascrivi il global `supabase` con l'istanza client
+        window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase inizializzato:', window.supabase);
+    </script>
+    <!-- 3) Carica poi il tuo JS -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>
