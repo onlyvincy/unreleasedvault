@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Beat Tracker</title>
     <link rel="stylesheet" href="app.css" />
+    <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+
+  
+/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -27,10 +37,12 @@
 
     <!-- BOTTOM NAVBAR -->
     <nav id="bottom-nav">
-        <button id="home-btn">🏠</button>
+        <button id="home-btn"><i class="fa-solid fa-house"></i></button>
+        
+        <button id="library-btn"><i class="fa-solid fa-vault"></i></button>
         <button id="add-btn">＋</button>
-        <button id="library-btn">🎸</button>
     </nav>
+    
 
     <!-- MODAL ADD BEAT -->
     <div id="modal" class="hidden">
@@ -60,11 +72,13 @@
     <!-- GLOBAL AUDIO BAR (in fondo al body) -->
     <footer id="audio-bar" class="">
         <div id="now-playing">—</div>
+        
+        
+        <!-- <span id="timer">0:00</span> -->
         <button id="play-pause">▶</button>
-        <input id="seek" type="range" value="0" min="0" max="100">
-        <span id="timer">0:00</span>
         <audio id="audio"></audio>
     </footer>
+    <input id="seek" type="range" value="0" min="0" max="100">
 
     <!-- Supabase + app.js ... (tuo codice già esistente) -->
 

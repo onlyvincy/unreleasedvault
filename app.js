@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const thisWeek = beats.filter(b => new Date(b.date) >= monday);
         const count = thisWeek.length;
         const pct = Math.min(100, Math.round((count / 20) * 100));
-        counterEl.textContent = `${count} / 20`;
+        counterEl.textContent = `${count}/20`;
         progressEl.style.width = pct + '%';
         summaryEl.textContent = `${pct}% Done — Ti rimangono ${Math.max(0, 7 - count)} giorni`;
     }
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!b.url) return;
       audioEl.src = b.url;
       audioEl.play();
-      playBtn.textContent = '⏸';
+      playBtn.textContent = '❚❚';
       nowPlaying.textContent = b.name;
       audioBar.classList.remove('hidden');
     };
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
    
 
     // click su tutta la riga
-    li.addEventListener('click', () => playBeat());
+    li.addEventListener('click', () => {playBeat(); nowPlaying.textContent = b.name;});
     // supporto tastiera (invio / spazio)
     li.addEventListener('keypress', e => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     seekBar.addEventListener('input', () => audioEl.currentTime = seekBar.value);
     playBtn.addEventListener('click', () => {
-        if (audioEl.paused) { audioEl.play(); playBtn.textContent = '⏸'; }
+        if (audioEl.paused) { audioEl.play(); playBtn.textContent = '❚❚'; }
         else { audioEl.pause(); playBtn.textContent = '▶'; }
     });
 
@@ -167,4 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // **avvia tutto**
     loadBeatsFromDB();
+
+
+    
 });
