@@ -416,3 +416,15 @@ i {
 .dashboard {
   height:21px;
 }
+
+/*Blur effect for bottom nav*/
+nav#bottom-nav {
+    backdrop-filter: blur(12px);
+    background-color: transparent !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    
+}
+footer#audio-bar {
+  backdrop-filter: blur(6px);
+ background-color: rgba(0, 0, 0, 0.5) !important;
+}
