@@ -2,9 +2,10 @@
   "name": "Unreleased Vault",
   "short_name": "Vault",
   "start_url": ".",
-  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#222222",
+  "display": "standalone",
+  "description": "A web app to track and manage unreleased music beats.",
   "icons": [
     {
       "src": "icon-192.png",
@@ -16,5 +17,6 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+    
   ]
 }
