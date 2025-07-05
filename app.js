@@ -327,7 +327,7 @@ audioBar.addEventListener('click', () => {
   bpTrackTitle.textContent   = beat.name;
   bpArtist.textContent       = Array.isArray(beat.artists)
                                 ? beat.artists.join(', ')
-                                : beat.artists || '—';
+                                : beat.artists || '';
   if (beat.explicit) {
     bpExplicit.classList.remove('hidden');
   } else {
