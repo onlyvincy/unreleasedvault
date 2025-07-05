@@ -412,3 +412,7 @@ i {
 .beat-item:not(.playing) .playing-gif {
   display: none;
 }
+
+.dashboard {
+  height:21px;
+}
