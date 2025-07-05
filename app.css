@@ -397,7 +397,7 @@ i {
 
 .beat-item.playing {
   background: #f0f0f0;
-  opacity: 0.7;
+  opacity: 0.5;
   position: relative;
 }
 .playing-gif {
