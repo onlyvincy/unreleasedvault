@@ -269,7 +269,7 @@ section { padding: 1rem; }
 
 #seek {
   position: fixed;
-  bottom:77px;
+  bottom:64px;
   width:100vw;
 
  
@@ -427,4 +427,57 @@ nav#bottom-nav {
 footer#audio-bar {
   backdrop-filter: blur(6px);
  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+
+/* 1. Remove default styling */
+input[type="range"] {
+  -webkit-appearance: none;  /* Chrome, Safari, Opera */
+  -moz-appearance: none;     /* Firefox */
+  appearance: none;
+  width: 100%;
+  margin: 1em 0;  
+  background: transparent;    /* we’ll style the track separately */
+}
+
+/* 2. Style the track (the “rail” your thumb slides on) */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;                /* super thin */
+  background: #ccc;
+  border-radius: 1px;
+}
+input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: #ccc;
+  border-radius: 1px;
+}
+
+/* 3. Style the thumb (the draggable handle) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 6px;                 /* small width */
+  height: 6px;                /* small height */
+  background: #333;
+  border-radius: 50%;         /* still round, but tiny */
+  margin-top: -2px;           /* center vertically on a 2px track */
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 6px;
+  height: 6px;
+  background: #333;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* 4. (Optional) Hide the outline on focus and add your own focus styling */
+input[type="range"]:focus {
+  outline: none;
+}
+input[type="range"]:focus::-webkit-slider-runnable-track {
+  background: #999;
+}
+input[type="range"]:focus::-moz-range-track {
+  background: #999;
 }
