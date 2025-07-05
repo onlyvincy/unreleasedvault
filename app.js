@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="play-btn">▶</button>
       <div class="info">
         <strong>${b.name}</strong>
-        <small>★${b.rating} · ${b.tag} · ${new Date(b.date).toLocaleDateString()}</small>
+        <small>★${b.rating} · ${b.tag} · ${(Array.isArray(b.artists) ? b.artists.join(', ') : b.artists || '')} · ${new Date(b.date).toLocaleDateString()}</small>
       </div>
       
       <div class="menu-container" style="position:relative;display:inline-block;">
@@ -119,9 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
             li.querySelector('.edit-btn').addEventListener('click', async e => {
                 e.stopPropagation();
                 form['beat-name'].value = b.name;
-                form['beat-bpm'].value = b.bpm;
+                form['beat-date'].value = b.date ? b.date.split('T')[0] : '';
                 document.getElementById('beat-rating').value = b.rating;
                 document.getElementById('beat-tag').value = b.tag;
+                form['beat-artists'].value = Array.isArray(b.artists) ? b.artists.join(', ') : (b.artists || "OnlyVincy");
                 form['beat-notes'].value = b.notes || '';
                 modal.setAttribute('data-edit-id', b.name);
                 modal.classList.remove('hidden');
@@ -175,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEl.addEventListener('loadedmetadata', () => seekBar.max = audioEl.duration);
     audioEl.addEventListener('timeupdate', () => {
         seekBar.value = audioEl.currentTime;
-        timerSpan.textContent = formatTime(audioEl.currentTime);
+    
     });
     seekBar.addEventListener('input', () => audioEl.currentTime = seekBar.value);
     playBtn.addEventListener('click', () => {
@@ -196,14 +197,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // ——— Submit handler ———
     form.addEventListener('submit', async e => {
         e.preventDefault();
+        console.log(form['beat-name']);
         const name = form['beat-name'].value.trim();
-        const bpm = form['beat-bpm'].value.trim();
+        const date = form['beat-date'].value;
         const rating = parseInt(document.getElementById('beat-rating').value, 10);
         const tag = document.getElementById('beat-tag').value;
         const notes = form['beat-notes'].value.trim();
+        // ARTISTS AS ARRAY
+        const artistsRaw = form['beat-artists'] ? form['beat-artists'].value : "OnlyVincy";
+        const artists = artistsRaw
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a.length > 0);
         const editId = modal.getAttribute('data-edit-id');
 
-        if (!name || !bpm) return;
+        if (!name || !date) return;
         let fileURL = null;
         const file = form['beat-file'].files[0];
 
@@ -219,10 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // UPDATE
             const updateData = {
                 name,
-                bpm: parseInt(bpm, 10),
+                date,
                 rating,
                 tag,
-                notes
+                notes,
+                artists
             };
             if (fileURL) updateData.url = fileURL;
             const { error } = await supabase.from('beats').update(updateData).eq('name', editId);
@@ -236,11 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('beats')
                 .insert([{
                     name,
-                    bpm: parseInt(bpm, 10),
+                    date,
                     rating,
                     tag,
                     notes,
-                    date: new Date().toISOString(),
+                    artists,
                     url: fileURL
                 }]);
         }
@@ -255,6 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btnAdd.addEventListener('click', () => {
         form.reset();
         modal.removeAttribute('data-edit-id');
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        form['beat-date'].value = today;
+        form['beat-artists'].value = "OnlyVincy";
         modal.classList.remove('hidden');
     });
     btnClose.addEventListener('click', () => {
@@ -270,4 +283,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // **avvia tutto**
     loadBeatsFromDB();
+
+    // ...existing code...
+
+// === Refactoring Big Player ===
+// Assicurati che esista già:
+// const audioEl      = document.getElementById('audio');
+// const audioBar     = document.getElementById('audio-bar');
+// funzione helper già definita:
+// function formatTime(sec) { const m=Math.floor(sec/60), s=Math.floor(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+// selettori principali
+// selettori
+const bpModal       = document.getElementById('big-player-modal');
+const bpClose       = document.getElementById('bp-close');
+
+const bpAlbumTitle  = document.getElementById('bp-album-title');
+const bpTrackTitle  = document.getElementById('bp-track-title');
+const bpArtist      = document.getElementById('bp-artist');
+const bpExplicit    = document.getElementById('bp-explicit');
+
+const bpCurrentTime = document.getElementById('bp-current-time');
+const bpDuration    = document.getElementById('bp-duration');
+const bpSeek        = document.getElementById('bp-seek');
+
+const bpPlay        = document.getElementById('bp-play');
+
+
+
+// helper per formattare i tempi
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// quando apro il big player
+audioBar.addEventListener('click', () => {
+  const beat = beats.find(b => b.name === currentPlayingName);
+  if (!beat) return;
+
+  // testo dinamico
+  bpAlbumTitle.textContent   = beat.album || '—';
+  bpTrackTitle.textContent   = beat.name;
+  bpArtist.textContent       = Array.isArray(beat.artists)
+                                ? beat.artists.join(', ')
+                                : beat.artists || '—';
+  if (beat.explicit) {
+    bpExplicit.classList.remove('hidden');
+  } else {
+    bpExplicit.classList.add('hidden');
+  }
+
+  // sync iniziale seek & durata
+  bpSeek.max               = audioEl.duration || 0;
+  bpSeek.value             = audioEl.currentTime || 0;
+  bpCurrentTime.textContent = formatTime(audioEl.currentTime);
+  bpDuration.textContent    = formatTime(audioEl.duration || 0);
+
+  bpModal.classList.remove('hidden');
 });
+
+// chiudi modal
+bpClose.addEventListener('click', () => bpModal.classList.add('hidden'));
+bpModal.addEventListener('click', e => {
+  if (e.target === bpModal) bpModal.classList.add('hidden');
+});
+
+// play / pause
+bpPlay.addEventListener('click', () => {
+  if (audioEl.paused) {
+    audioEl.play();
+    bpPlay.textContent = '❚❚';
+  } else {
+    audioEl.pause();
+    bpPlay.textContent = '▶';
+  }
+});
+
+// aggiorno seek & timer mentre suona
+audioEl.addEventListener('timeupdate', () => {
+  if (!bpModal.classList.contains('hidden')) {
+    bpSeek.value              = audioEl.currentTime;
+    bpCurrentTime.textContent = formatTime(audioEl.currentTime);
+  }
+});
+
+// interazione seek
+bpSeek.addEventListener('input', () => {
+  audioEl.currentTime = bpSeek.value;
+});
+
+});
+

@@ -48,71 +48,176 @@
 
     <!-- RECENT LIST -->
     <section id="recent">
-        <h2>Recent Music:</h2>
+        <h2>Recent :</h2>
         <ul id="beat-list"></ul>
     </section>
 
     <!-- BOTTOM NAVBAR -->
     <nav id="bottom-nav">
-        <button id="home-btn"><img class ="dashboard" src="icons/dashboard.png"></button>
+        <button id="home-btn"><img class="dashboard" src="icons/dashboard.png"></button>
 
-        <button id="library-btn"><img class ="dashboard" src="icons/vault.png"></button>
+        <button id="library-btn"><img class="dashboard" src="icons/vault.png"></button>
         <button id="add-btn">＋</button>
     </nav>
 
 
     <!-- MODAL ADD BEAT -->
+    <!-- Nuova versione del modal senza BPM e con campo Data -->
     <div id="modal" class="hidden">
         <div id="modal-content">
             <button id="close-modal">✕</button>
             <h3>Aggiungi Beat</h3>
             <form id="beat-form">
                 <input type="text" id="beat-name" placeholder="Titolo beat" required />
-                <input type="number" id="beat-bpm" placeholder="BPM" required />
-                <!-- aggiungi subito dopo il campo BPM -->
-                <label for="beat-rating">Rating</label>
+
+                <label for="beat-date">Data</label>
+                <input type="date" id="beat-date" name="beat-date" required />
+
+                <label for="beat-rating">Rating 0-5</label>
                 <input type="number" id="beat-rating" name="beat-rating" min="1" max="5" value="3" required />
 
+                <!-- ...existing code... -->
                 <label for="beat-tag">Tipo</label>
                 <select id="beat-tag" name="beat-tag" required>
                     <option value="Beat">Beat</option>
                     <option value="Sample">Sample</option>
+                    <option value="Song">Song</option>
                 </select>
+                <!-- ...existing code... -->
+                <!-- ...existing code... -->
+                <br><label for="beat-artists">Artisti</label>
+                <input type="text" id="beat-artists" name="beat-artists" placeholder="Artisti separati da virgola"
+                    value="OnlyVincy" required />
 
+                <!-- ...existing code... -->
                 <textarea id="beat-notes" placeholder="Note (opzionale)"></textarea>
                 <input type="file" id="beat-file" accept=".mp3,audio/mpeg" />
                 <button type="submit">ADD</button>
             </form>
         </div>
     </div>
-
-    <!-- GLOBAL AUDIO BAR (in fondo al body) -->
-    <footer id="audio-bar" class="">
-        <div id="now-playing">—</div>
-
-
-        <!-- <span id="timer">0:00</span> -->
-        <button id="play-pause">▶</button>
-        <audio id="audio"></audio>
-    </footer>
-    <input id="seek" type="range" value="0" min="0" max="100">
-
-    <!-- Supabase + app.js ... (tuo codice già esistente) -->
+        <!-- GLOBAL AUDIO BAR (in fondo al body) -->
+        <footer id="audio-bar" class="">
+            <div id="now-playing">—</div>
 
 
-    <!-- 1) Carica il bundle UMD di Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
-    <!-- 2) Inizializza il client senza shadowing -->
-    <script>
-        window.SUPABASE_URL = 'https://cbdfohvkllpidwigjykd.supabase.co';
-        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
-        // ❌ rimuovi qualsiasi "const supabase =" qui
-        // ✔ invece sovrascrivi il global `supabase` con l'istanza client
-        window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        console.log('✅ Supabase inizializzato:', window.supabase);
-    </script>
-    <!-- 3) Carica poi il tuo JS -->
-    <script src="app.js"></script>
+            <!-- <span id="timer">0:00</span> -->
+            <button id="play-pause">▶</button>
+            <audio id="audio"></audio>
+        </footer>
+        <input id="seek" type="range" value="0" min="0" max="100">
+
+        <!-- Supabase + app.js ... (tuo codice già esistente) -->
+
+
+        <!-- 1) Carica il bundle UMD di Supabase -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+        <!-- 2) Inizializza il client senza shadowing -->
+        <script>
+            window.SUPABASE_URL = 'https://cbdfohvkllpidwigjykd.supabase.co';
+            window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
+            // ❌ rimuovi qualsiasi "const supabase =" qui
+            // ✔ invece sovrascrivi il global `supabase` con l'istanza client
+            window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            console.log('✅ Supabase inizializzato:', window.supabase);
+        </script>
+        <!-- 3) Carica poi il tuo JS -->
+        <script src="app.js"></script>
+
+<!-- Big Player Modal -->
+<div id="big-player-modal" class="hidden">
+  <div id="big-player-content">
+    <!-- Topbar: chiudi + titolo album -->
+    <div class="bp-topbar">
+      <button id="bp-close" class="icon-btn">⌄</button>
+      <h1 id="bp-album-title">—</h1>
+    </div>
+
+    <!-- Track info: titolo + explicit + artista -->
+    <div class="bp-track-info">
+      <div class="bp-meta">
+        <div class="bp-title-row">
+          <h2 id="bp-track-title">—</h2>
+          <span id="bp-explicit" class="explicit hidden">E</span>
+        </div>
+        <p id="bp-artist">—</p>
+      </div>
+    </div>
+
+    <!-- Seek bar -->
+    <div class="bp-seek-container">
+      <span id="bp-current-time">0:00</span>
+      <input type="range" id="bp-seek" min="0" max="100" value="0" step="0.01" />
+      <span id="bp-duration">0:00</span>
+    </div>
+
+    <!-- Solo play/pause -->
+    <div class="bp-controls">
+      <button id="bp-play" class="icon-btn big">▶</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* container full-screen */
+  #big-player-modal {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    display: flex; justify-content: center; align-items: flex-end;
+    z-index: 999;
+  }
+  #big-player-modal.hidden { display: none; }
+
+  /* card */
+  #big-player-content {
+    width: 100%; max-height: 90%;
+    background: rgba(0,0,0,0.6); color: #fff;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* topbar e controls */
+  .bp-topbar, .bp-controls {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .bp-topbar h1 {
+    font-size: 16px; font-weight: normal; margin: 0;
+  }
+  .icon-btn {
+    background: none; border: none; color: #fff;
+    font-size: 24px; cursor: pointer;
+  }
+
+  /* track info */
+  .bp-track-info { display: flex; }
+  .bp-meta { flex: 1; }
+  .bp-title-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .bp-title-row h2 {
+    font-size: 20px; margin: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .explicit {
+    background: #444; padding: 2px 4px; border-radius: 2px;
+    font-size: 12px; font-weight: bold;
+  }
+  .hidden { display: none; }
+
+  /* seek */
+  .bp-seek-container {
+    display: flex; align-items: center; gap: 8px;
+  }
+  #bp-seek { flex: 1; }
+
+  /* play button grande */
+  .bp-controls .big {
+    font-size: 36px;
+    margin: 0 auto;
+  }
+</style>
+
 
 </body>
 
