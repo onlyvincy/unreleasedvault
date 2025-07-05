@@ -1,3 +1,7 @@
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // ——— Stato globale ———
     let beats = [];
