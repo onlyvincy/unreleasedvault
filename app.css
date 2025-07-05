@@ -95,6 +95,8 @@ section { padding: 1rem; }
   border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
+  gap:16px;
+  align-items:center ;
 }
 #beat-list li .info { flex:1; }
 #beat-list li .bpm { margin-left: 1rem; }
@@ -401,9 +403,10 @@ i {
 .playing-gif {
   width: 32px;
   height: 32px;
-  position: absolute;
-  right: 16px;
-  top: 16px;
+  
+  left: 8px;
+  top: 4px;;
+
   display: inline-block;
 }
 .beat-item:not(.playing) .playing-gif {
