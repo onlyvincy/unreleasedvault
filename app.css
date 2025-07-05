@@ -107,7 +107,7 @@ section { padding: 1rem; }
   display: flex;
   justify-content: space-around;
   background: #000000;
-  padding: 32px 0;
+
   position: fixed;
   width:100%;
   bottom:0;
@@ -222,7 +222,7 @@ section { padding: 1rem; }
 /* Player persistente */
 #audio-bar {
   position: fixed;
-  bottom: 67px; left: 0; right: 0;
+  bottom: 80px; left: 0; right: 0;
   background: #000000;
   color: #fff;
   padding: 16px 24px;
@@ -254,7 +254,7 @@ section { padding: 1rem; }
   background: #000000;
   display: flex;
   justify-content: space-around;
-  padding: 16px 0;
+  padding: 24px 0;
 }
 
 
@@ -269,7 +269,7 @@ section { padding: 1rem; }
 
 #seek {
   position: fixed;
-  bottom:62px;
+  bottom:77px;
   width:100vw;
 
  
@@ -279,7 +279,7 @@ section { padding: 1rem; }
   height:32px;
   width:32px;
   border-radius:256px;
-  background-color: #a11313 !important;
+  background-color: transparent !important;
   color:white;
   font-weight: bold;
   border: 0;
