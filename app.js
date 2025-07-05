@@ -1,5 +1,9 @@
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js');
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW failed:', err));
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -59,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = 'beat-item';
             li.setAttribute('role', 'button');
             li.setAttribute('tabindex', '0');
-            if (b.name === currentPlayingName) {li.classList.add('playing');};
+            if (b.name === currentPlayingName) { li.classList.add('playing'); };
 
             li.innerHTML = `
             <img class="playing-gif" src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWZsbzB3MGhsaW5jdWNwZHJlYjhvdnRrdGt5NHVxamVxMDd3cmVyZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9VkaGX5OKCjrjjNi98/giphy.gif" alt="In riproduzione" />

@@ -4,28 +4,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#222222">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <title>Unreleased[VAULT]</title>
     <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-<div class="animate__animated animate__bounce"></div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
 
-  
-/>
+    <link rel="manifest" href="/manifest.json">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#222222">
-<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152.png">
-<link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120.png">
 
 </head>
 
@@ -34,7 +32,7 @@
     <section id="dashboard">
         <h1 style="font-family: TuskerMedium; font-size:36px;">Weekly Goal 🎯</h1>
         <div id="counter">0 / 20</div>
-        
+
         <div class="progress-bar">
             <div id="progress"></div>
         </div>
@@ -50,11 +48,11 @@
     <!-- BOTTOM NAVBAR -->
     <nav id="bottom-nav">
         <button id="home-btn"><i class="fa-solid fa-house"></i></button>
-        
+
         <button id="library-btn"><i class="fa-solid fa-vault"></i></button>
         <button id="add-btn">＋</button>
     </nav>
-    
+
 
     <!-- MODAL ADD BEAT -->
     <div id="modal" class="hidden">
@@ -75,7 +73,7 @@
                 </select>
 
                 <textarea id="beat-notes" placeholder="Note (opzionale)"></textarea>
-                <input type="file" id="beat-file"  accept=".mp3,audio/mpeg" />
+                <input type="file" id="beat-file" accept=".mp3,audio/mpeg" />
                 <button type="submit">ADD</button>
             </form>
         </div>
@@ -84,8 +82,8 @@
     <!-- GLOBAL AUDIO BAR (in fondo al body) -->
     <footer id="audio-bar" class="">
         <div id="now-playing">—</div>
-        
-        
+
+
         <!-- <span id="timer">0:00</span> -->
         <button id="play-pause">▶</button>
         <audio id="audio"></audio>
@@ -105,7 +103,7 @@
         // ✔ invece sovrascrivi il global `supabase` con l'istanza client
         window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
         console.log('✅ Supabase inizializzato:', window.supabase);
-    </script>                                                                                                                       
+    </script>
     <!-- 3) Carica poi il tuo JS -->
     <script src="app.js"></script>
 
