@@ -1,8 +1,8 @@
 {
   "name": "Unreleased[Vault]",
   "short_name": "Unreleased[Vault]",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/unreleasedvault/index.html",
+  "scope": "/unreleasedvault",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#222222",
