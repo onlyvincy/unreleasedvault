@@ -6,10 +6,63 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// === Netlify Credentials ===
+const NETLIFY_TOKEN = "nfp_Qa6ubTtpbTSpPjsmh7ZywJq1BKSzPzKrd314";
+const SITE_ID = "4853be8f-7cc0-46bd-b3f2-6b6dd53a247f";
+const NETLIFY_URL = "earnest-choux-45b55b.netlify.app";
+
+// === Netlify MP3 Upload Function ===
+async function sha1hex(buffer) {
+    const hashBuffer = await crypto.subtle.digest("SHA-1", buffer);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function uploadMp3ViaNetlify(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const hash = await sha1hex(arrayBuffer);
+    const key = `audio/${file.name}`;
+
+    // 1. Request a new deploy (get presigned URL if needed)
+    const deployRes = await fetch(
+        `https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${NETLIFY_TOKEN}`
+            },
+            body: JSON.stringify({
+                files: { [key]: hash }
+            })
+        }
+    );
+    if (!deployRes.ok) {
+        const err = await deployRes.text();
+        throw new Error("Deploy failed: " + err);
+    }
+    const deployData = await deployRes.json();
+    // console.log("deployData", deployData);
+
+    // 2. Upload the blob only if needed
+    const fileObj = deployData.files?.[key];
+    if (fileObj && fileObj.upload_url) {
+        const uploadRes = await fetch(fileObj.upload_url, { method: "PUT", body: file });
+        if (!uploadRes.ok) {
+            const err = await uploadRes.text();
+            throw new Error("Upload failed: " + err);
+        }
+    }
+    // 3. Return the real Netlify site URL for public use
+    return `https://${NETLIFY_URL}/audio/${encodeURIComponent(file.name)}`;
+}
+
+
 async function initApp() {
     // ——— Stato globale ———
     let beats = [];
-    let currentPlayingName = null; // Per evidenziare la card in play
+    let currentPlayingName = null;
 
     // ——— Selettori ———
     const counterEl = document.getElementById('counter');
@@ -29,22 +82,20 @@ async function initApp() {
     const playBtn = document.getElementById('play-pause');
     const seekBar = document.getElementById('seek');
     const timerSpan = document.getElementById('timer');
-    
 
-  const fileInput = document.getElementById('beat-file');
-  const nameInput = document.getElementById('beat-name');
-const titleEl = document.getElementById('beat-title');
-  const dateInput = document.getElementById('beat-date');
+    const fileInput = document.getElementById('beat-file');
+    const nameInput = document.getElementById('beat-name');
+    const titleEl = document.getElementById('beat-title');
+    const dateInput = document.getElementById('beat-date');
 
- // 1) Utente modifica l’H2 → aggiorno automaticamente l’input hidden
+    // H2 → input hidden
     titleEl.addEventListener('input', () => {
-    nameInput.value = titleEl.innerText.trim();
-  });
-   // 2) Se arrivi in init già con un valore (es: drag & drop), ripopolo subito l’H2
-  if (nameInput.value) {
-    titleEl.innerText = nameInput.value;
-  }
-    // ——— Helpers ———
+        nameInput.value = titleEl.innerText.trim();
+    });
+    if (nameInput.value) {
+        titleEl.innerText = nameInput.value;
+    }
+
     function getLastMonday() {
         const now = new Date(), d = now.getDay();
         const diff = now.getDate() - d + (d === 0 ? -6 : 1);
@@ -55,18 +106,17 @@ const titleEl = document.getElementById('beat-title');
         return `${m}:${s}`;
     }
 
-    // ——— Render ———
     function renderDashboard() {
         const monday = getLastMonday();
         const thisWeek = beats.filter(b => new Date(b.date) >= monday);
         const count = thisWeek.length;
         const pct = Math.min(100, Math.round((count / 20) * 100));
         counterEl.innerHTML = `
-  <span class="count">${count}</span>
-  <span class="slash" style="font-weight:100;">/</span>
-  <span class="total">20</span>
-  <p style="font-family: Inter; font-size:12px; letter-spacing:0px; margin-bottom: 16px;">Beat/Sample Completati</p>
-`;
+            <span class="count">${count}</span>
+            <span class="slash" style="font-weight:100;">/</span>
+            <span class="total">20</span>
+            <p style="font-family: Inter; font-size:12px; letter-spacing:0px; margin-bottom: 16px;">Beat/Sample Completati</p>
+        `;
         progressEl.style.width = pct + '%';
         summaryEl.textContent = `${pct}% Done — Ti rimangono ${Math.max(0, 7 - count)} giorni`;
     }
@@ -81,23 +131,21 @@ const titleEl = document.getElementById('beat-title');
             if (b.name === currentPlayingName) { li.classList.add('playing'); };
 
             li.innerHTML = `
-            <img class="playing-gif" src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWZsbzB3MGhsaW5jdWNwZHJlYjhvdnRrdGt5NHVxamVxMDd3cmVyZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9VkaGX5OKCjrjjNi98/giphy.gif" alt="In riproduzione" />
-      <button class="play-btn">▶</button>
-      <div class="info">
-        <strong>${b.name}</strong>
-        <small>★${b.rating} · ${b.tag} · ${(Array.isArray(b.artists) ? b.artists.join(', ') : b.artists || '')} · ${new Date(b.date).toLocaleDateString()}</small>
-      </div>
-      
-      <div class="menu-container" style="position:relative;display:inline-block;">
-        <button class="menu-btn" aria-label="Azioni" style="background:none;border:none;font-size:20px;cursor:pointer;">⋯</button>
-        <ul class="menu-list" style="display:none;position:absolute;right:0;top:24px;background:#fff;border:1px solid #ddd;list-style:none;padding:0;margin:0;z-index:10;">
-          <li><button class="edit-btn" style="width:100%;border:none;background:none;padding:8px 16px;cursor:pointer;">✏️ Modifica</button></li>
-          <li><button class="delete-btn" style="width:100%;border:none;background:none;padding:8px 16px;cursor:pointer;color:#c00;">🗑️ Elimina</button></li>
-        </ul>
-      </div>
-    `;
+                <img class="playing-gif" src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWZsbzB3MGhsaW5jdWNwZHJlYjhvdnRrdGt5NHVxamVxMDd3cmVyZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9VkaGX5OKCjrjjNi98/giphy.gif" alt="In riproduzione" />
+                <button class="play-btn">▶</button>
+                <div class="info">
+                    <strong>${b.name}</strong>
+                    <small>★${b.rating} · ${b.tag} · ${(Array.isArray(b.artists) ? b.artists.join(', ') : b.artists || '')} · ${new Date(b.date).toLocaleDateString()}</small>
+                </div>
+                <div class="menu-container" style="position:relative;display:inline-block;">
+                    <button class="menu-btn" aria-label="Azioni" style="background:none;border:none;font-size:20px;cursor:pointer;">⋯</button>
+                    <ul class="menu-list" style="display:none;position:absolute;right:0;top:24px;background:#fff;border:1px solid #ddd;list-style:none;padding:0;margin:0;z-index:10;">
+                        <li><button class="edit-btn" style="width:100%;border:none;background:none;padding:8px 16px;cursor:pointer;">✏️ Modifica</button></li>
+                        <li><button class="delete-btn" style="width:100%;border:none;background:none;padding:8px 16px;cursor:pointer;color:#c00;">🗑️ Elimina</button></li>
+                    </ul>
+                </div>
+            `;
 
-            // Play function
             const playBeat = () => {
                 if (!b.url) return;
                 audioEl.src = b.url;
@@ -121,7 +169,6 @@ const titleEl = document.getElementById('beat-title');
                 }
             });
 
-            // Gestione menu tre pallini
             const menuBtn = li.querySelector('.menu-btn');
             const menuList = li.querySelector('.menu-list');
             menuBtn.addEventListener('click', e => {
@@ -130,7 +177,6 @@ const titleEl = document.getElementById('beat-title');
                 menuList.style.display = menuList.style.display === 'block' ? 'none' : 'block';
             });
 
-            // Edit
             li.querySelector('.edit-btn').addEventListener('click', async e => {
                 e.stopPropagation();
                 form['beat-name'].value = b.name;
@@ -144,7 +190,6 @@ const titleEl = document.getElementById('beat-title');
                 menuList.style.display = 'none';
             });
 
-            // Delete
             li.querySelector('.delete-btn').addEventListener('click', async e => {
                 e.stopPropagation();
                 if (confirm('Sei sicuro di voler eliminare questo beat/sample?')) {
@@ -162,12 +207,10 @@ const titleEl = document.getElementById('beat-title');
         });
     }
 
-    // Chiudi tutti i menu-list cliccando fuori
     document.addEventListener('click', e => {
         document.querySelectorAll('.menu-list').forEach(ml => ml.style.display = 'none');
     });
 
-    // ——— Load da DB ———
     async function loadBeatsFromDB() {
         try {
             const { data, error } = await supabase
@@ -184,17 +227,12 @@ const titleEl = document.getElementById('beat-title');
     }
 
     fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    nameInput.value = file.name.replace(/\.[^/.]+$/, '');
-    titleEl.innerText = nameInput.value;
-     // auto-fill date from file.lastModified
-  const modDate = new Date(file.lastModified);
-  // format as YYYY-MM-DD for input[type=date]
-  dateInput.value = modDate.toISOString().split('T')[0];
-  });
-
-
+        const file = e.target.files[0];
+        if (!file) return;
+        nameInput.value = file.name.replace(/\.[^/.]+$/, '');
+        titleEl.innerText = nameInput.value;
+        dateInput.value = new Date().toISOString().split('T')[0];
+    });
 
     btnLibrary.addEventListener('click', () => {
         window.location.href = 'library.html';
@@ -204,11 +242,9 @@ const titleEl = document.getElementById('beat-title');
         window.location.href = 'search.html';
     });
 
-    // ——— Player init ———
     audioEl.addEventListener('loadedmetadata', () => seekBar.max = audioEl.duration);
     audioEl.addEventListener('timeupdate', () => {
         seekBar.value = audioEl.currentTime;
-    
     });
     seekBar.addEventListener('input', () => audioEl.currentTime = seekBar.value);
     playBtn.addEventListener('click', () => {
@@ -226,47 +262,44 @@ const titleEl = document.getElementById('beat-title');
         playBtn.textContent = '▶';
     });
 
-    // ——— Submit handler ———
+    // ——— Submit handler (UPLOAD via NETLIFY, save URL in Supabase DB) ———
     form.addEventListener('submit', async e => {
         e.preventDefault();
-     
+
         const text = titleEl.innerText.trim();
-        console.log(form['beat-name']);
         const name = form['beat-name'].value.trim();
         const date = form['beat-date'].value;
         const rating = parseInt(document.getElementById('beat-rating').value, 10);
         const tag = document.getElementById('beat-tag').value;
         const notes = form['beat-notes'].value.trim();
-        // ARTISTS AS ARRAY
         const artistsRaw = form['beat-artists'] ? form['beat-artists'].value : "OnlyVincy";
         const artists = artistsRaw
             .split(',')
             .map(a => a.trim())
             .filter(a => a.length > 0);
         const editId = modal.getAttribute('data-edit-id');
-         // validazione come prima
-  if (!text) {
-    e.preventDefault();
-    titleEl.focus();
-    return alert('Devi inserire un titolo!');
-  }
 
-   // copia nel tuo input “ufficiale”
-  document.getElementById('beat-name').value = text;
+        if (!text) {
+            e.preventDefault();
+            titleEl.focus();
+            return alert('Devi inserire un titolo!');
+        }
+
+        document.getElementById('beat-name').value = text;
         if (!name || !date) return;
         let fileURL = null;
         const file = form['beat-file'].files[0];
 
         if (file) {
-            const path = `${Date.now()}_${file.name}`;
-            const { error: upErr } = await supabase.storage.from('mp3s').upload(path, file);
-            if (upErr) { console.error(upErr); return; }
-            const { data: urlData } = supabase.storage.from('mp3s').getPublicUrl(path);
-            fileURL = urlData.publicUrl;
+            try {
+                fileURL = await uploadMp3ViaNetlify(file);
+            } catch (err) {
+                alert('Errore upload MP3 su Netlify: ' + err.message);
+                return;
+            }
         }
 
         if (editId) {
-            // UPDATE
             const updateData = {
                 name,
                 date,
@@ -282,7 +315,6 @@ const titleEl = document.getElementById('beat-title');
                 return;
             }
         } else {
-            // INSERT
             await supabase
                 .from('beats')
                 .insert([{
@@ -302,11 +334,9 @@ const titleEl = document.getElementById('beat-title');
         modal.removeAttribute('data-edit-id');
     });
 
-    // ——— Modal & init ———
     btnAdd.addEventListener('click', () => {
         form.reset();
         modal.removeAttribute('data-edit-id');
-        // Set today's date as default
         const today = new Date().toISOString().split('T')[0];
         form['beat-date'].value = today;
         form['beat-artists'].value = "OnlyVincy";
@@ -323,118 +353,91 @@ const titleEl = document.getElementById('beat-title');
         }
     });
 
-    // **avvia tutto**
     loadBeatsFromDB();
 
-    // ...existing code...
+    // === Big Player ===
+    const bpModal = document.getElementById('big-player-modal');
+    const bpClose = document.getElementById('bp-close');
+    const bpAlbumTitle = document.getElementById('bp-album-title');
+    const bpTrackTitle = document.getElementById('bp-track-title');
+    const bpArtist = document.getElementById('bp-artist');
+    const bpExplicit = document.getElementById('bp-explicit');
+    const bpCurrentTime = document.getElementById('bp-current-time');
+    const bpDuration = document.getElementById('bp-duration');
+    const bpSeek = document.getElementById('bp-seek');
+    const bpPlay = document.getElementById('bp-play');
 
-// === Refactoring Big Player ===
-// Assicurati che esista già:
-// const audioEl      = document.getElementById('audio');
-// const audioBar     = document.getElementById('audio-bar');
-// funzione helper già definita:
-// function formatTime(sec) { const m=Math.floor(sec/60), s=Math.floor(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
-// selettori principali
-// selettori
-const bpModal       = document.getElementById('big-player-modal');
-const bpClose       = document.getElementById('bp-close');
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
 
-const bpAlbumTitle  = document.getElementById('bp-album-title');
-const bpTrackTitle  = document.getElementById('bp-track-title');
-const bpArtist      = document.getElementById('bp-artist');
-const bpExplicit    = document.getElementById('bp-explicit');
+    audioBar.addEventListener('click', (e) => {
+        if (e.target.closest('#play-pause') || e.target.closest('#seek')) return;
+        const beat = beats.find(b => b.name === currentPlayingName);
 
-const bpCurrentTime = document.getElementById('bp-current-time');
-const bpDuration    = document.getElementById('bp-duration');
-const bpSeek        = document.getElementById('bp-seek');
+        if (!beat) return;
 
-const bpPlay        = document.getElementById('bp-play');
+        bpAlbumTitle.textContent = beat.album || '—';
+        bpTrackTitle.textContent = beat.name;
+        bpArtist.textContent = Array.isArray(beat.artists)
+            ? beat.artists.join(', ')
+            : beat.artists || '';
+        if (beat.explicit) {
+            bpExplicit.classList.remove('hidden');
+        } else {
+            bpExplicit.classList.add('hidden');
+        }
 
+        bpSeek.max = audioEl.duration || 0;
+        bpSeek.value = audioEl.currentTime || 0;
+        bpCurrentTime.textContent = formatTime(audioEl.currentTime);
+        bpDuration.textContent = formatTime(audioEl.duration || 0);
 
+        bpModal.classList.remove('hidden');
+    });
 
-// helper per formattare i tempi
-function formatTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
+    bpClose.addEventListener('click', () => bpModal.classList.add('hidden'));
+    bpModal.addEventListener('click', e => {
+        if (e.target === bpModal) bpModal.classList.add('hidden');
+    });
 
-// quando apro il big player
-audioBar.addEventListener('click', (e) => {
-    if ( e.target.closest('#play-pause') || e.target.closest('#seek') ) return;
-  const beat = beats.find(b => b.name === currentPlayingName);
-    
-  if (!beat) return;
+    bpPlay.addEventListener('click', () => {
+        if (audioEl.paused) {
+            audioEl.play();
+            bpPlay.textContent = '❚❚';
+        } else {
+            audioEl.pause();
+            bpPlay.textContent = '▶';
+        }
+    });
 
-  // testo dinamico
-  bpAlbumTitle.textContent   = beat.album || '—';
-  bpTrackTitle.textContent   = beat.name;
-  bpArtist.textContent       = Array.isArray(beat.artists)
-                                ? beat.artists.join(', ')
-                                : beat.artists || '';
-  if (beat.explicit) {
-    bpExplicit.classList.remove('hidden');
-  } else {
-    bpExplicit.classList.add('hidden');
-  }
+    audioEl.addEventListener('timeupdate', () => {
+        if (!bpModal.classList.contains('hidden')) {
+            bpSeek.value = audioEl.currentTime;
+            bpCurrentTime.textContent = formatTime(audioEl.currentTime);
+        }
+    });
 
-  // sync iniziale seek & durata
-  bpSeek.max               = audioEl.duration || 0;
-  bpSeek.value             = audioEl.currentTime || 0;
-  bpCurrentTime.textContent = formatTime(audioEl.currentTime);
-  bpDuration.textContent    = formatTime(audioEl.duration || 0);
+    bpSeek.addEventListener('input', () => {
+        audioEl.currentTime = bpSeek.value;
+    });
 
-  bpModal.classList.remove('hidden');
-});
+    // ——— Drag & Drop Overlay ———
+    let dragCounter = 0;
+    const dragOverlay = document.getElementById('drag-overlay');
+    const dragOverlayContent = document.getElementById('drag-overlay-content');
 
-// chiudi modal
-bpClose.addEventListener('click', () => bpModal.classList.add('hidden'));
-bpModal.addEventListener('click', e => {
-  if (e.target === bpModal) bpModal.classList.add('hidden');
-});
-
-// play / pause
-bpPlay.addEventListener('click', () => {
-  if (audioEl.paused) {
-    audioEl.play();
-    bpPlay.textContent = '❚❚';
-  } else {
-    audioEl.pause();
-    bpPlay.textContent = '▶';
-  }
-});
-
-// aggiorno seek & timer mentre suona
-audioEl.addEventListener('timeupdate', () => {
-  if (!bpModal.classList.contains('hidden')) {
-    bpSeek.value              = audioEl.currentTime;
-    bpCurrentTime.textContent = formatTime(audioEl.currentTime);
-  }
-});
-
-// interazione seek
-bpSeek.addEventListener('input', () => {
-  audioEl.currentTime = bpSeek.value;
-});
-
-
-//drop dei file mp3
-// ——— Drag & Drop con overlay animato ———
-let dragCounter = 0;
-const dragOverlay        = document.getElementById('drag-overlay');
-const dragOverlayContent = document.getElementById('drag-overlay-content');
-
-document.addEventListener('dragenter', e => {
-  e.preventDefault();
-  dragCounter++;
-  // mostro overlay solo se sto trascinando file
-  if (Array.from(e.dataTransfer.items).some(i => i.kind === 'file')) {
-    dragOverlay.classList.remove('hidden');
-    dragOverlayContent.classList.remove('animate__fadeOut');
-    dragOverlayContent.classList.add('animate__fadeIn');
-  }
-});
-
+    document.addEventListener('dragenter', e => {
+        e.preventDefault();
+        dragCounter++;
+        if (Array.from(e.dataTransfer.items).some(i => i.kind === 'file')) {
+            dragOverlay.classList.remove('hidden');
+            dragOverlayContent.classList.remove('animate__fadeOut');
+            dragOverlayContent.classList.add('animate__fadeIn');
+        }
+    });
 document.addEventListener('dragleave', e => {
   e.preventDefault();
   dragCounter--;
