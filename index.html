@@ -40,10 +40,12 @@
         <h1 style="font-family: TuskerMedium; font-size:36px;">Weekly Goal 🎯</h1>
         <div id="counter">0 / 20</div>
 
-        <div class="progress-bar">
-            <div id="progress"></div>
+        <div class="divprogress">
+            <div class="progress-bar">
+                <div id="progress"></div>
+            </div>
+            <div id="summary"></div>
         </div>
-        <div id="summary"></div>
     </section>
 
     <!-- RECENT LIST -->
@@ -53,12 +55,7 @@
     </section>
 
     <!-- BOTTOM NAVBAR -->
-    <nav id="bottom-nav">
-        <button id="home-btn"><img class="dashboard" src="icons/dashboard.png"></button>
-
-        <button id="library-btn"><img class="dashboard" src="icons/vault.png"></button>
-        <button id="add-btn">＋</button>
-    </nav>
+    <div data-include-html="partials/nav.html"></div>
 
 
     <!-- MODAL ADD BEAT -->
@@ -68,7 +65,9 @@
             <button id="close-modal">✕</button>
             <h3>Aggiungi Beat</h3>
             <form id="beat-form">
-                <input type="text" id="beat-name" placeholder="Titolo beat" required />
+                <!-- Titolo live-editable per l’utente -->
+                <h2 id="beat-title" class="editable" contenteditable="true" data-placeholder="Titolo beat"></h2>
+                <input type="hidden" id="beat-name" placeholder="Titolo beat" required />
 
                 <label for="beat-date">Data</label>
                 <input type="date" id="beat-date" name="beat-date" required />
@@ -96,128 +95,161 @@
             </form>
         </div>
     </div>
-        <!-- GLOBAL AUDIO BAR (in fondo al body) -->
-        <footer id="audio-bar" class="">
-            <div id="now-playing">—</div>
+
+    <!-- Supabase + app.js ... (tuo codice già esistente) -->
 
 
-            <!-- <span id="timer">0:00</span> -->
-            <button id="play-pause">▶</button>
-            <audio id="audio"></audio>
-        </footer>
-        <input id="seek" type="range" value="0" min="0" max="100">
+    <!-- 1) Carica il bundle UMD di Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+    <!-- 2) Inizializza il client senza shadowing -->
+    <script>
+        window.SUPABASE_URL = 'https://cbdfohvkllpidwigjykd.supabase.co';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
+        // ❌ rimuovi qualsiasi "const supabase =" qui
+        // ✔ invece sovrascrivi il global `supabase` con l'istanza client
+        window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase inizializzato:', window.supabase);
+    </script>
+    <!-- 3) Carica poi il tuo JS -->
+    <!-- dentro index.html, subito prima di app.js -->
+    <!-- script includeHTML -->
+    <script>
+        async function includeHTML() {
+            const els = document.querySelectorAll('[data-include-html]');
+            for (let el of els) {
+                const url = el.getAttribute('data-include-html');
+                try {
+                    const res = await fetch(url);
+                    const text = await res.text();
+                    const doc = new DOMParser().parseFromString(text, 'text/html');
+                    const nodes = Array.from(doc.body.children);
+                    el.replaceWith(...nodes);
+                } catch (err) {
+                    console.error('Include error:', err);
+                }
+            }
+            // Solo dopo aver inserito tutti i partials, carico App
+            const s = document.createElement('script');
+            s.src = 'app.js';
+            document.body.appendChild(s);
+        }
+        window.addEventListener('DOMContentLoaded', includeHTML);
+    </script>
 
-        <!-- Supabase + app.js ... (tuo codice già esistente) -->
+    <div data-include-html="partials/player.html"></div>
 
+    <style>
+        /* container full-screen */
+        #big-player-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 999;
+        }
 
-        <!-- 1) Carica il bundle UMD di Supabase -->
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
-        <!-- 2) Inizializza il client senza shadowing -->
-        <script>
-            window.SUPABASE_URL = 'https://cbdfohvkllpidwigjykd.supabase.co';
-            window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZGZvaHZrbGxwaWR3aWdqeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDc0NTYsImV4cCI6MjA2NzEyMzQ1Nn0.vpnWdLjAlnuiTK65pH-G_2OsTdkI1GFiVuDBnttc-7k';
-            // ❌ rimuovi qualsiasi "const supabase =" qui
-            // ✔ invece sovrascrivi il global `supabase` con l'istanza client
-            window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-            console.log('✅ Supabase inizializzato:', window.supabase);
-        </script>
-        <!-- 3) Carica poi il tuo JS -->
-        <script src="app.js"></script>
+        #big-player-modal.hidden {
+            display: none;
+        }
 
-<!-- Big Player Modal -->
-<div id="big-player-modal" class="hidden">
-  <div id="big-player-content">
-    <!-- Topbar: chiudi + titolo album -->
-    <div class="bp-topbar">
-      <button id="bp-close" class="icon-btn">⌄</button>
-      <h1 id="bp-album-title">—</h1>
-    </div>
- <img src="player.png" class="imageplayer">
-    <!-- Track info: titolo + explicit + artista -->
-    <div class="bp-track-info">
-      <div class="bp-meta">
-        <div class="bp-title-row">
-          <h2 id="bp-track-title">—</h2>
-          <span id="bp-explicit" class="explicit hidden">E</span>
+        /* card */
+        #big-player-content {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* topbar e controls */
+        .bp-topbar,
+        .bp-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bp-topbar h1 {
+            font-size: 16px;
+            font-weight: normal;
+            margin: 0;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* track info */
+        .bp-track-info {
+            display: flex;
+        }
+
+        .bp-meta {
+            flex: 1;
+        }
+
+        .bp-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bp-title-row h2 {
+            font-size: 20px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .explicit {
+            background: #444;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* seek */
+        .bp-seek-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #bp-seek {
+            flex: 1;
+        }
+
+        /* play button grande */
+        .bp-controls .big {
+            font-size: 36px;
+            margin: 0 auto;
+        }
+    </style>
+
+    <!-- Drag-and-Drop Overlay -->
+    <div id="drag-overlay" class="hidden">
+        <div id="drag-overlay-content" class="animate__animated">
+            Rilascia qua i file
         </div>
-        <p id="bp-artist"></p>
-      </div>
     </div>
-
-    <!-- Seek bar -->
-    <div class="bp-seek-container">
-      <span id="bp-current-time">0:00</span>
-      <input type="range" id="bp-seek" min="0" max="100" value="0" step="0.01" />
-      <span id="bp-duration">0:00</span>
-    </div>
-
-    <!-- Solo play/pause -->
-    <div class="bp-controls">
-      <button id="bp-play" class="icon-btn big">❚❚</button>
-    </div>
-  </div>
-</div>
-
-<style>
-  /* container full-screen */
-  #big-player-modal {
-    position: fixed; top:0; left:0; right:0; bottom:0;
-    display: flex; justify-content: center; align-items: flex-end;
-    z-index: 999;
-  }
-  #big-player-modal.hidden { display: none; }
-
-  /* card */
-  #big-player-content {
-    width: 100%; 
-    background: rgba(0,0,0,0.6); color: #fff;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 16px;
-  }
-
-  /* topbar e controls */
-  .bp-topbar, .bp-controls {
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .bp-topbar h1 {
-    font-size: 16px; font-weight: normal; margin: 0;
-  }
-  .icon-btn {
-    background: none; border: none; color: #fff;
-    font-size: 24px; cursor: pointer;
-  }
-
-  /* track info */
-  .bp-track-info { display: flex; }
-  .bp-meta { flex: 1; }
-  .bp-title-row {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .bp-title-row h2 {
-    font-size: 20px; margin: 0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .explicit {
-    background: #444; padding: 2px 4px; border-radius: 2px;
-    font-size: 12px; font-weight: bold;
-  }
-  .hidden { display: none; }
-
-  /* seek */
-  .bp-seek-container {
-    display: flex; align-items: center; gap: 8px;
-  }
-  #bp-seek { flex: 1; }
-
-  /* play button grande */
-  .bp-controls .big {
-    font-size: 36px;
-    margin: 0 auto;
-  }
-</style>
-
 
 </body>
 

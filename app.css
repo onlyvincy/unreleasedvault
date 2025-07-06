@@ -48,13 +48,13 @@ section { padding: 1rem; }
 
 /* → Dashboard */
 #dashboard {
-  background: linear-gradient(135deg, #2a002a, #000);
+  background: linear-gradient(19deg, #2a002a, #000);
   border-bottom-left-radius: 2rem;
   border-bottom-right-radius: 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap:0;
+  gap:8px;
   padding:48px;
   box-shadow: 0 4px 250px rgba(255, 0, 0, 0.2);
 }
@@ -222,7 +222,7 @@ section { padding: 1rem; }
 /* Player persistente */
 #audio-bar {
   position: fixed;
-  bottom: 80px; left: 0; right: 0;
+  bottom: 88px; left: 0; right: 0;
   background: #000000;
   color: #fff;
   padding: 16px 24px;
@@ -254,7 +254,7 @@ section { padding: 1rem; }
   background: #000000;
   display: flex;
   justify-content: space-around;
-  padding: 24px 0;
+  padding: 16px;
 }
 
 
@@ -269,7 +269,7 @@ section { padding: 1rem; }
 
 #seek {
   position: fixed;
-  bottom:64px;
+  bottom:72px;
   width:100vw;
 
  
@@ -560,4 +560,67 @@ h2#bp-track-title {
     align-items: center;
     gap: 8px;
     justify-content: center;
+}
+
+
+#drag-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 10000;
+}
+
+#drag-overlay.hidden {
+  display: none;
+}
+
+#drag-overlay-content {
+  font-size: 24px;
+  color: #fff;
+  background: rgba(0,0,0,0.6);
+  padding: 16px 32px;
+  border-radius: 8px;
+}
+
+i {
+  width: auto !important;
+}
+
+
+.icon-inactive {
+  opacity: 0.5 !important;
+}
+
+.navbtncontent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px !important;
+}
+
+#bottom-nav {
+  height:88px !important;
+  align-items: center;
+}
+
+.editable {
+  font-size: 32px;
+  font-weight: bold;
+  padding: 8px;
+  min-height: 1.2em;
+  outline: none;
+  cursor: text;
+  color: #fff;
+}
+
+/* Placeholder text */
+.editable:empty::before {
+  content: attr(data-placeholder);
+  color: #666;
+  pointer-events: none;
 }

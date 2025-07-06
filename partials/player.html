@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>player</title></head>
+<body>
+<!-- GLOBAL AUDIO BAR -->
+<footer id="audio-bar">
+  <div id="now-playing">—</div>
+  <button id="play-pause">▶</button>
+  <audio id="audio"></audio>
+</footer>
+<input id="seek" type="range" min="0" max="100" value="0" />
+
+<!-- Big Player Modal -->
+<div id="big-player-modal" class="hidden">
+  <div id="big-player-content">
+    <div class="bp-topbar">
+      <button id="bp-close" class="icon-btn">⌄</button>
+      <h1 id="bp-album-title">—</h1>
+    </div>
+    <img src="player.png">
+    <div class="bp-track-info">
+      <div class="bp-meta">
+        <div class="bp-title-row">
+          <h2 id="bp-track-title">—</h2>
+          <span id="bp-explicit" class="explicit hidden">E</span>
+        </div>
+        <p id="bp-artist">—</p>
+      </div>
+    </div>
+    <div class="bp-seek-container">
+      <span id="bp-current-time">0:00</span>
+      <input type="range" id="bp-seek" min="0" max="100" value="0" step="0.01" />
+      <span id="bp-duration">0:00</span>
+    </div>
+    <div class="bp-controls">
+      <button id="bp-play" class="icon-btn big">▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drag-and-Drop Overlay -->
+<div id="drag-overlay" class="hidden">
+  <div id="drag-overlay-content" class="animate__animated">Rilascia qua i file</div>
+</div>
+</body>
+</html>

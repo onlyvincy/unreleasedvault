@@ -6,7 +6,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function initApp() {
     // ——— Stato globale ———
     let beats = [];
     let currentPlayingName = null; // Per evidenziare la card in play
@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnClose = document.getElementById('close-modal');
     const form = document.getElementById('beat-form');
     const btnLibrary = document.getElementById('library-btn');
+    const btnSearch = document.getElementById('search-btn');
     // Player
     const audioBar = document.getElementById('audio-bar');
     const audioEl = document.getElementById('audio');
@@ -28,7 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const playBtn = document.getElementById('play-pause');
     const seekBar = document.getElementById('seek');
     const timerSpan = document.getElementById('timer');
+    
 
+  const fileInput = document.getElementById('beat-file');
+  const nameInput = document.getElementById('beat-name');
+const titleEl = document.getElementById('beat-title');
+  const dateInput = document.getElementById('beat-date');
+
+ // 1) Utente modifica l’H2 → aggiorno automaticamente l’input hidden
+    titleEl.addEventListener('input', () => {
+    nameInput.value = titleEl.innerText.trim();
+  });
+   // 2) Se arrivi in init già con un valore (es: drag & drop), ripopolo subito l’H2
+  if (nameInput.value) {
+    titleEl.innerText = nameInput.value;
+  }
     // ——— Helpers ———
     function getLastMonday() {
         const now = new Date(), d = now.getDay();
@@ -168,8 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    nameInput.value = file.name.replace(/\.[^/.]+$/, '');
+    titleEl.innerText = nameInput.value;
+    dateInput.value = new Date().toISOString().split('T')[0];
+  });
+
+
+
     btnLibrary.addEventListener('click', () => {
         window.location.href = 'library.html';
+    });
+
+    btnSearch.addEventListener('click', () => {
+        window.location.href = 'search.html';
     });
 
     // ——— Player init ———
@@ -197,6 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ——— Submit handler ———
     form.addEventListener('submit', async e => {
         e.preventDefault();
+     
+        const text = titleEl.innerText.trim();
         console.log(form['beat-name']);
         const name = form['beat-name'].value.trim();
         const date = form['beat-date'].value;
@@ -210,7 +241,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(a => a.trim())
             .filter(a => a.length > 0);
         const editId = modal.getAttribute('data-edit-id');
+         // validazione come prima
+  if (!text) {
+    e.preventDefault();
+    titleEl.focus();
+    return alert('Devi inserire un titolo!');
+  }
 
+   // copia nel tuo input “ufficiale”
+  document.getElementById('beat-name').value = text;
         if (!name || !date) return;
         let fileURL = null;
         const file = form['beat-file'].files[0];
@@ -318,8 +357,10 @@ function formatTime(sec) {
 }
 
 // quando apro il big player
-audioBar.addEventListener('click', () => {
+audioBar.addEventListener('click', (e) => {
+    if ( e.target.closest('#play-pause') || e.target.closest('#seek') ) return;
   const beat = beats.find(b => b.name === currentPlayingName);
+    
   if (!beat) return;
 
   // testo dinamico
@@ -373,5 +414,65 @@ bpSeek.addEventListener('input', () => {
   audioEl.currentTime = bpSeek.value;
 });
 
+
+//drop dei file mp3
+// ——— Drag & Drop con overlay animato ———
+let dragCounter = 0;
+const dragOverlay        = document.getElementById('drag-overlay');
+const dragOverlayContent = document.getElementById('drag-overlay-content');
+
+document.addEventListener('dragenter', e => {
+  e.preventDefault();
+  dragCounter++;
+  // mostro overlay solo se sto trascinando file
+  if (Array.from(e.dataTransfer.items).some(i => i.kind === 'file')) {
+    dragOverlay.classList.remove('hidden');
+    dragOverlayContent.classList.remove('animate__fadeOut');
+    dragOverlayContent.classList.add('animate__fadeIn');
+  }
 });
 
+document.addEventListener('dragleave', e => {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter === 0) {
+    // animazione di uscita
+    dragOverlayContent.classList.remove('animate__fadeIn');
+    dragOverlayContent.classList.add('animate__fadeOut');
+    dragOverlayContent.addEventListener('animationend', () => {
+      dragOverlay.classList.add('hidden');
+    }, { once: true });
+  }
+});
+
+document.addEventListener('dragover', e => {
+  e.preventDefault();  // necessario per abilitare il drop
+});
+
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dragOverlay.classList.add('hidden');
+
+  // prendo il primo .mp3 e lo inietto nel fileInput
+  const files = Array.from(e.dataTransfer.files);
+  const mp3 = files.find(f => f.type === 'audio/mpeg' || f.name.endsWith('.mp3'));
+  if (!mp3) return;
+
+  const dt = new DataTransfer();
+  dt.items.add(mp3);
+  fileInput.files = dt.files;
+
+  // scatta il tuo listener di change per name/date
+  fileInput.dispatchEvent(new Event('change'));
+
+  // apro il modal in insert-mode
+  modal.removeAttribute('data-edit-id');
+  modal.classList.remove('hidden');
+});
+
+
+
+}
+
+initApp();
