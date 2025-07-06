@@ -188,7 +188,10 @@ const titleEl = document.getElementById('beat-title');
     if (!file) return;
     nameInput.value = file.name.replace(/\.[^/.]+$/, '');
     titleEl.innerText = nameInput.value;
-    dateInput.value = new Date().toISOString().split('T')[0];
+     // auto-fill date from file.lastModified
+  const modDate = new Date(file.lastModified);
+  // format as YYYY-MM-DD for input[type=date]
+  dateInput.value = modDate.toISOString().split('T')[0];
   });
 
 
