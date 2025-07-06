@@ -356,6 +356,7 @@ async function initApp() {
     const bpModal = document.getElementById('big-player-modal');
     
 const bpSheet   = document.getElementById('big-player-content'); // the sliding card
+    const bpShare = document.getElementById("bp-share");
 
     const bpClose = document.getElementById('bp-close');
     const bpAlbumTitle = document.getElementById('bp-album-title');
@@ -386,6 +387,46 @@ function closeBigPlayer() {
     bpModal.classList.remove('visible');
     setTimeout(() => bpModal.classList.add('hidden'), 350); // Matches CSS duration
 }
+if (bpShare) {
+  bpShare.addEventListener("click", async () => {
+    // Trova il beat corrente
+    const beat = beats[currentIndex];
+    if (!beat || !beat.url) return alert("Nessun file da condividere!");
+
+    try {
+      // Scarica il file mp3 come blob
+      const resp = await fetch(beat.url);
+      if (!resp.ok) throw new Error("Errore nel download MP3");
+      const blob = await resp.blob();
+
+      // File oggetto per share API
+      const file = new File([blob], beat.name + ".mp3", { type: "audio/mpeg" });
+
+      // Web Share API 2.0
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: beat.name,
+          files: [file],
+        });
+      } else {
+        // Fallback: Download diretto
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = beat.name + ".mp3";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(a.href);
+        }, 1000);
+        alert("La condivisione non è supportata su questo dispositivo. File scaricato.");
+      }
+    } catch (err) {
+      alert("Errore durante la condivisione: " + err.message);
+    }
+  });
+}
+
 
     audioBar.addEventListener('click', (e) => {
     if (e.target.closest('#play-pause') || e.target.closest('#seek')) return;
