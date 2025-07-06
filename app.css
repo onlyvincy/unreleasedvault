@@ -678,3 +678,23 @@ i {
 #beat-add-btn{
   background-color: white !important;
 }
+#big-player-modal {
+    transition: transform 0.35s cubic-bezier(.22,1.02,.57,1), opacity 0.2s;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+#big-player-modal.visible {
+    transform: translateY(0%);
+    opacity: 1;
+    pointer-events: auto;
+}
+#big-player-modal .grip-bar {
+    width: 60px;
+    height: 6px;
+    border-radius: 3px;
+    background: #aaa;
+    opacity: 0.6;
+    margin: 12px auto 16px auto;
+}
+

@@ -12,52 +12,49 @@ const SITE_ID = "4853be8f-7cc0-46bd-b3f2-6b6dd53a247f";
 const NETLIFY_URL = "earnest-choux-45b55b.netlify.app";
 
 // === Netlify MP3 Upload Function ===
-async function sha1hex(buffer) {
-    const hashBuffer = await crypto.subtle.digest("SHA-1", buffer);
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+async function sha1hex(buf){
+  const h = await crypto.subtle.digest("SHA-1", buf);
+  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-async function uploadMp3ViaNetlify(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const hash = await sha1hex(arrayBuffer);
-    const key = `audio/${file.name}`;
+async function uploadMp3ViaNetlify(file){
+  /* 1️⃣  hash + start a production deploy */
+  const buf  = await file.arrayBuffer();
+  const hash = await sha1hex(buf);
+  const key  = `audio/${file.name}`;               // path inside your site
 
-    // 1. Request a new deploy (get presigned URL if needed)
-    const deployRes = await fetch(
-        `https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${NETLIFY_TOKEN}`
-            },
-            body: JSON.stringify({
-                files: { [key]: hash }
-            })
-        }
-    );
-    if (!deployRes.ok) {
-        const err = await deployRes.text();
-        throw new Error("Deploy failed: " + err);
+  const deploy = await fetch(
+    `https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys?production=true`,
+    {
+      method : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${NETLIFY_TOKEN}`
+      },
+      body   : JSON.stringify({ files: { [key]: hash } })
     }
-    const deployData = await deployRes.json();
-    // console.log("deployData", deployData);
+  ).then(r => r.ok ? r.json()
+                   : r.text().then(t => { throw new Error("Deploy: "+t); }));
 
-    // 2. Upload the blob only if needed
-    const fileObj = deployData.files?.[key];
-    if (fileObj && fileObj.upload_url) {
-        const uploadRes = await fetch(fileObj.upload_url, { method: "PUT", body: file });
-        if (!uploadRes.ok) {
-            const err = await uploadRes.text();
-            throw new Error("Upload failed: " + err);
-        }
-    }
-    // 3. Return the real Netlify site URL for public use
-    return `https://${NETLIFY_URL}/audio/${encodeURIComponent(file.name)}`;
+  /* 2️⃣  Netlify says which hashes it still needs */
+  if (deploy.required && deploy.required.includes(hash)){
+    const safePath = `audio/${encodeURIComponent(file.name)}`; // encode filename only
+    const putURL   = `https://api.netlify.com/api/v1/deploys/${deploy.id}/files/${safePath}`;
+
+    const put = await fetch(putURL, {
+      method : "PUT",
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Authorization": `Bearer ${NETLIFY_TOKEN}`
+      },
+      body   : buf
+    });
+    if (!put.ok) throw new Error("Upload: "+await put.text());
+  }
+
+  /* 3️⃣  done — give back the playable URL */
+  return `https://${NETLIFY_URL}/audio/${encodeURIComponent(file.name)}`;
 }
-
 
 async function initApp() {
     // ——— Stato globale ———
@@ -357,6 +354,9 @@ async function initApp() {
 
     // === Big Player ===
     const bpModal = document.getElementById('big-player-modal');
+    
+const bpSheet   = document.getElementById('big-player-content'); // the sliding card
+
     const bpClose = document.getElementById('bp-close');
     const bpAlbumTitle = document.getElementById('bp-album-title');
     const bpTrackTitle = document.getElementById('bp-track-title');
@@ -373,35 +373,49 @@ async function initApp() {
         return `${m}:${s}`;
     }
 
+
+    function openBigPlayer() {
+    bpModal.classList.remove('hidden');
+    // Wait one frame so the browser registers the state change
+    requestAnimationFrame(() => {
+        bpModal.classList.add('visible');
+    });
+}
+
+function closeBigPlayer() {
+    bpModal.classList.remove('visible');
+    setTimeout(() => bpModal.classList.add('hidden'), 350); // Matches CSS duration
+}
+
     audioBar.addEventListener('click', (e) => {
-        if (e.target.closest('#play-pause') || e.target.closest('#seek')) return;
-        const beat = beats.find(b => b.name === currentPlayingName);
+    if (e.target.closest('#play-pause') || e.target.closest('#seek')) return;
+    const beat = beats.find(b => b.name === currentPlayingName);
 
-        if (!beat) return;
+    if (!beat) return;
 
-        bpAlbumTitle.textContent = beat.album || '—';
-        bpTrackTitle.textContent = beat.name;
-        bpArtist.textContent = Array.isArray(beat.artists)
-            ? beat.artists.join(', ')
-            : beat.artists || '';
-        if (beat.explicit) {
-            bpExplicit.classList.remove('hidden');
-        } else {
-            bpExplicit.classList.add('hidden');
-        }
+    bpAlbumTitle.textContent = beat.album || '—';
+    bpTrackTitle.textContent = beat.name;
+    bpArtist.textContent = Array.isArray(beat.artists)
+        ? beat.artists.join(', ')
+        : beat.artists || '';
+    if (beat.explicit) {
+        bpExplicit.classList.remove('hidden');
+    } else {
+        bpExplicit.classList.add('hidden');
+    }
 
-        bpSeek.max = audioEl.duration || 0;
-        bpSeek.value = audioEl.currentTime || 0;
-        bpCurrentTime.textContent = formatTime(audioEl.currentTime);
-        bpDuration.textContent = formatTime(audioEl.duration || 0);
+    bpSeek.max = audioEl.duration || 0;
+    bpSeek.value = audioEl.currentTime || 0;
+    bpCurrentTime.textContent = formatTime(audioEl.currentTime);
+    bpDuration.textContent = formatTime(audioEl.duration || 0);
 
-        bpModal.classList.remove('hidden');
-    });
+    openBigPlayer();
+});
 
-    bpClose.addEventListener('click', () => bpModal.classList.add('hidden'));
-    bpModal.addEventListener('click', e => {
-        if (e.target === bpModal) bpModal.classList.add('hidden');
-    });
+bpClose.addEventListener('click', () => closeBigPlayer());
+bpModal.addEventListener('click', e => {
+    if (e.target === bpModal) closeBigPlayer();
+});
 
     bpPlay.addEventListener('click', () => {
         if (audioEl.paused) {
@@ -424,6 +438,58 @@ async function initApp() {
         audioEl.currentTime = bpSeek.value;
     });
 
+    // >>> PASTE THE SWIPE DOWN CODE HERE <<<
+/* ----- swipe-down-to-close for the player card ----- */
+
+let startY = 0, deltaY = 0, dragging = false;
+
+/* helper */
+function resetSheet() {
+  bpSheet.style.transition = '';
+  bpSheet.style.transform  = '';
+  bpModal.style.opacity    = '';
+}
+
+/* pointer + touch start */
+function dragStart(clientY){
+  startY   = clientY;
+  deltaY   = 0;
+  dragging = true;
+  bpSheet.style.transition = 'none';
+}
+
+/* pointer + touch move */
+function dragMove(clientY){
+  if (!dragging) return;
+  deltaY = clientY - startY;
+  if (deltaY > 0){                                  // only downward
+    bpSheet.style.transform = `translateY(${deltaY}px)`;
+    bpModal.style.opacity   = 1 - Math.min(deltaY/250,1);
+  }
+}
+
+/* pointer + touch end */
+function dragEnd(){
+  if (!dragging) return;
+  bpSheet.style.transition = '';                    // re-enable snap
+  if (deltaY > 120){
+    closeBigPlayer();
+  } else {
+    resetSheet();
+  }
+  dragging = false;
+}
+
+/* --- pointer events (desktop + mobile modern browsers) --- */
+bpSheet.addEventListener('pointerdown',   e => { if(e.button===0) dragStart(e.clientY); });
+bpSheet.addEventListener('pointermove',   e => dragMove(e.clientY));
+bpSheet.addEventListener('pointerup',     dragEnd);
+bpSheet.addEventListener('pointercancel', dragEnd);
+
+/* --- fallback for older iOS Safari (touch events only) --- */
+bpSheet.addEventListener('touchstart', e => dragStart(e.touches[0].clientY), {passive:false});
+bpSheet.addEventListener('touchmove',  e => { e.preventDefault(); dragMove(e.touches[0].clientY); }, {passive:false});
+bpSheet.addEventListener('touchend',   dragEnd);
     // ——— Drag & Drop Overlay ———
     let dragCounter = 0;
     const dragOverlay = document.getElementById('drag-overlay');
