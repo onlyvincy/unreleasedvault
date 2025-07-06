@@ -63,35 +63,51 @@
     <div id="modal" class="hidden">
         <div id="modal-content">
             <button id="close-modal">✕</button>
-            <h3>Aggiungi Beat</h3>
+
             <form id="beat-form">
                 <!-- Titolo live-editable per l’utente -->
                 <h2 id="beat-title" class="editable" contenteditable="true" data-placeholder="Titolo beat"></h2>
-                <input type="hidden" id="beat-name" placeholder="Titolo beat" required />
+                <input type="hidden" id="beat-name" placeholder="Titolo beat" required class="addbeat-input" />
+                
+                <div class="form-group">
+                <!-- icona data-->
+                 <img class = "icona" src="icons/date.png" alt="Artisti" />
+                <input type="date" id="beat-date" class="addbeat-input" name="beat-date" required />
+                    </div>
+                <div class="form-group">
 
-                <label for="beat-date">Data</label>
-                <input type="date" id="beat-date" name="beat-date" required />
-
-                <label for="beat-rating">Rating 0-5</label>
-                <input type="number" id="beat-rating" name="beat-rating" min="1" max="5" value="3" required />
-
+                <div class="modal-rating form-group">
+                    <!-- icona stelle-->
+                     <i class="fa-solid fa-star"></i>
+                    <input type="number" class="addbeat-input" id="beat-rating" name="beat-rating" min="1" max="5" value="3" required />
+                </div>
                 <!-- ...existing code... -->
-                <label for="beat-tag">Tipo</label>
-                <select id="beat-tag" name="beat-tag" required>
+                 <div class="modal-tag form-group">
+                <!-- icona tag-->
+                 <img class = "icona" src="icons/tag.png" alt="Artisti" />
+                <select id="beat-tag" class="addbeat-input" name="beat-tag" required>
                     <option value="Beat">Beat</option>
                     <option value="Sample">Sample</option>
                     <option value="Song">Song</option>
                 </select>
-                <!-- ...existing code... -->
-                <!-- ...existing code... -->
-                <br><label for="beat-artists">Artisti</label>
-                <input type="text" id="beat-artists" name="beat-artists" placeholder="Artisti separati da virgola"
-                    value="OnlyVincy" required />
 
+                </div>
+                </div>
                 <!-- ...existing code... -->
-                <textarea id="beat-notes" placeholder="Note (opzionale)"></textarea>
+                <!-- ...existing code... -->
+                <div class="modal-artists form-group">
+                    <!-- icona artisti-->
+                     <img class = "icona" src="icons/artists.png" alt="Artisti" />
+                    <input type="text" id="beat-artists" class="addbeat-input" name="beat-artists"
+                        placeholder="Artisti separati da virgola" value="OnlyVincy" required />
+                </div>
+                <div class="modal-notes form-group">
+                <!-- icona note -->
+                 <img class = "icona" src="icons/notes.png" alt="Artisti" />
+                <textarea id="beat-notes" class="addbeat-input" placeholder="Note (opzionale)"></textarea>
+                </div>
                 <input type="file" id="beat-file" accept=".mp3,audio/mpeg" />
-                <button type="submit">ADD</button>
+                <button type="submit" class="beat-add-btn">ADD</button>
             </form>
         </div>
     </div>
