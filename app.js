@@ -120,7 +120,7 @@ async function initApp() {
 
     function renderList() {
         listEl.innerHTML = '';
-        beats.slice(0, 5).forEach(b => {
+        beats.slice(0, 10).forEach(b => {   
             const li = document.createElement('li');
             li.className = 'beat-item';
             li.setAttribute('role', 'button');
