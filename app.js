@@ -6,6 +6,8 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+
+
 // === Netlify Credentials ===
 const NETLIFY_TOKEN = "nfp_Qa6ubTtpbTSpPjsmh7ZywJq1BKSzPzKrd314";
 const SITE_ID = "4853be8f-7cc0-46bd-b3f2-6b6dd53a247f";
@@ -18,65 +20,22 @@ function safeName(original) {
   return encodeURIComponent(base) + "." + ext.toLowerCase();
 }
 
-// === Netlify MP3 Upload Function ===
-async function sha1hex(buf){
-  const h = await crypto.subtle.digest("SHA-1", buf);
-  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
 
-function makeKey(name, hash){
-  const [base, ext] = name.split(/\.(?=[^.]+$)/);    // "Beat.wav" → ["Beat","wav"]
-  return `audio/${toSlug(base)}-${hash.slice(0,6)}.${ext.toLowerCase()}`;
-}
 
-function toSlug(str){
-  return str
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // accenti → ascii
-    .replace(/[^\w\s-]/g,'')                         // via simboli
-    .trim().replace(/\s+/g,'-')                      // spazi → -
-    .toLowerCase();
-}
 
-async function uploadMp3ViaNetlify(file){
-  /* 1️⃣  hash + start a production deploy */
-  const buf  = await file.arrayBuffer();
-  const hash = await sha1hex(buf);
-  const key  = makeKey(file.name, hash);         // path inside your site
 
-  const deploy = await fetch(
-    `https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys?production=true`,
-    {
-      method : "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${NETLIFY_TOKEN}`
-      },
-      body   : JSON.stringify({ files: { [key]: hash } })
-    }
-  ).then(r => r.ok ? r.json()
-                   : r.text().then(t => { throw new Error("Deploy: "+t); }));
 
-  /* 2️⃣  Netlify says which hashes it still needs */
-  if (deploy.required && deploy.required.includes(hash)){
-    const safePath = key;   // è già “safe”
-    const putURL   = `https://api.netlify.com/api/v1/deploys/${deploy.id}/files/${safePath}`;
 
-    const put = await fetch(putURL, {
-      method : "PUT",
-      headers: {
-        "Content-Type": "audio/mpeg",
-        "Authorization": `Bearer ${NETLIFY_TOKEN}`
-      },
-      body   : buf
-    });
-    if (!put.ok) throw new Error("Upload: "+await put.text());
-  }
-
-  /* 3️⃣  done — give back the playable URL */
-  return `https://${NETLIFY_URL}/${key}`;
-}
 
 async function initApp() {
+
+    if (navigator.storage && navigator.storage.persist) {
+  const isPersisted = await navigator.storage.persisted();
+  if (!isPersisted) {
+    const granted = await navigator.storage.persist();
+    console.log('Storage persistente:', granted);
+  }
+}
     // ——— Stato globale ———
     let beats = [];
     let currentPlayingName = null;
@@ -230,19 +189,43 @@ async function initApp() {
     });
 
     async function loadBeatsFromDB() {
-        try {
-            const { data, error } = await supabase
-                .from('beats')
-                .select('*')
-                .order('date', { ascending: false });
-            if (error) throw error;
-            beats = data;
-            renderDashboard();
-            renderList();
-        } catch (err) {
-            console.error('❌ Errore caricamento beats da DB:', err);
+  try {
+    const { data, error } = await supabase
+      .from('beats')
+      .select('*')
+      .order('date', { ascending: false });
+    if (error) throw error;
+
+    beats = await Promise.all(data.map(async b => {
+      let localUrl = null;
+
+      if (!b.url) {
+        // nessun file
+        localUrl = null;
+      } 
+      else if (b.url.startsWith('http')) {
+        // vecchio record remoto, usalo direttamente
+        localUrl = b.url;
+      } 
+      else {
+        // nuovo record locale: b.url è fileId → prova IndexedDB
+        const blob = await idbKeyval.get(b.url);
+        if (blob) {
+          localUrl = URL.createObjectURL(blob);
         }
-    }
+      }
+
+      // assegna sempre la property che usi nel player
+      b.localUrl = localUrl;
+      return b;
+    }));
+
+    renderDashboard();
+    renderList();
+  } catch (err) {
+    console.error('❌ Errore caricamento beats da DB:', err);
+  }
+}
 
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -283,76 +266,96 @@ async function initApp() {
 
     // ——— Submit handler (UPLOAD via NETLIFY, save URL in Supabase DB) ———
     form.addEventListener('submit', async e => {
-        e.preventDefault();
+  e.preventDefault();
 
-        const text = titleEl.innerText.trim();
-        const name = form['beat-name'].value.trim();
-        const date = form['beat-date'].value;
-        const rating = parseInt(document.getElementById('beat-rating').value, 10);
-        const tag = document.getElementById('beat-tag').value;
-        const notes = form['beat-notes'].value.trim();
-        const artistsRaw = form['beat-artists'] ? form['beat-artists'].value : "OnlyVincy";
-        const artists = artistsRaw
-            .split(',')
-            .map(a => a.trim())
-            .filter(a => a.length > 0);
-        const editId = modal.getAttribute('data-edit-id');
+  // 1) raccogli campi
+  const text       = titleEl.innerText.trim();
+  const name       = form['beat-name'].value.trim();
+  const date       = form['beat-date'].value;
+  const rating     = parseInt(form['beat-rating'].value, 10);
+  const tag        = document.getElementById('beat-tag').value;
+  const notes      = form['beat-notes'].value.trim();
+  const artistsRaw = form['beat-artists']?.value || "OnlyVincy";
+  const artists    = artistsRaw.split(',').map(a => a.trim()).filter(a => a);
+  const editId     = modal.getAttribute('data-edit-id');
 
-        if (!text) {
-            e.preventDefault();
-            titleEl.focus();
-            return alert('Devi inserire un titolo!');
-        }
+  if (!text) {
+    titleEl.focus();
+    return alert('Devi inserire un titolo!');
+  }
+  // sincronizza il titolo nel campo name (se serve altrove)
+  document.getElementById('beat-name').value = text;
 
-        document.getElementById('beat-name').value = text;
-        
-        if (!name || !date) return;
-        let fileURL = null;
-        const file = form['beat-file'].files[0];
+  if (!name || !date) return;
 
-        if (file) {
-            try {
-                fileURL = await uploadMp3ViaNetlify(file);
-            } catch (err) {
-                alert('Errore upload MP3 su Netlify: ' + err.message);
-                return;
-            }
-        }
+  // 2) gestione file
+  const file     = form['beat-file'].files[0];
+  let fileId     = null;
+  let storageUrl = null;
 
-        if (editId) {
-            const updateData = {
-                name,
-                date,
-                rating,
-                tag,
-                notes,
-                artists
-            };
-            if (fileURL) updateData.url = fileURL;
-            const { error } = await supabase.from('beats').update(updateData).eq('name', editId);
-            if (error) {
-                alert('Errore durante la modifica: ' + error.message);
-                return;
-            }
-        } else {
-            await supabase
-                .from('beats')
-                .insert([{
-                    name,
-                    date,
-                    rating,
-                    tag,
-                    notes,
-                    artists,
-                    url: fileURL
-                }]);
-        }
+  if (file) {
+    // usa un ID univoco che faccia da key anche in IndexedDB
+    fileId = `${Date.now()}_${file.name}`;
+    // salva il blob in IndexedDB
+    await idbKeyval.set(fileId, file);
 
-        await loadBeatsFromDB();
-        form.reset();
-        modal.classList.add('hidden');
-        modal.removeAttribute('data-edit-id');
-    });
+    // upload su Supabase Storage bucket "mp3s"
+    const { error: upErr } = await supabase
+      .storage
+      .from('mp3s')
+      .upload(fileId, file);
+    if (upErr) {
+      console.error('❌ Upload bucket fallito:', upErr);
+    } else {
+      // ricava l'URL pubblico
+      const { data: urlData, error: urlErr } = supabase
+        .storage
+        .from('mp3s')
+        .getPublicUrl(fileId);
+      if (urlErr) console.warn('⚠️ getPublicUrl fallito:', urlErr);
+      else        storageUrl = urlData.publicUrl;
+    }
+  }
+
+  // 3) upsert in Supabase
+  if (editId) {
+    const updateData = { name, date, rating, tag, notes, artists };
+    if (fileId) {
+      updateData.file_id     = fileId;
+      updateData.storage_url = storageUrl;
+    }
+    const { error } = await supabase
+      .from('beats')
+      .update(updateData)
+      .eq('id', editId);
+    if (error) {
+      return alert('Errore durante la modifica: ' + error.message);
+    }
+  } else {
+    const { error } = await supabase
+      .from('beats')
+      .insert([{
+        name,
+        date,
+        rating,
+        tag,
+        notes,
+        artists,
+        file_id:     fileId,
+        storage_url: storageUrl
+      }]);
+    if (error) {
+      return alert('Errore durante il salvataggio: ' + error.message);
+    }
+  }
+
+  // 4) refresh UI
+  await loadBeatsFromDB();
+  form.reset();
+  modal.classList.add('hidden');
+  modal.removeAttribute('data-edit-id');
+});
+
 
     btnAdd.addEventListener('click', () => {
         form.reset();
