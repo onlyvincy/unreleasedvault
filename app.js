@@ -11,17 +11,37 @@ const NETLIFY_TOKEN = "nfp_Qa6ubTtpbTSpPjsmh7ZywJq1BKSzPzKrd314";
 const SITE_ID = "4853be8f-7cc0-46bd-b3f2-6b6dd53a247f";
 const NETLIFY_URL = "earnest-choux-45b55b.netlify.app";
 
+function safeName(original) {
+  // 1) encodeURIComponent = niente spazi, niente #, ecc.
+  // 2) ma teniamo l’estensione
+  const [base, ext] = original.split(/\.(?=[^.]+$)/);   // "beat bomba#1", "mp3"
+  return encodeURIComponent(base) + "." + ext.toLowerCase();
+}
+
 // === Netlify MP3 Upload Function ===
 async function sha1hex(buf){
   const h = await crypto.subtle.digest("SHA-1", buf);
   return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
+function makeKey(name, hash){
+  const [base, ext] = name.split(/\.(?=[^.]+$)/);    // "Beat.wav" → ["Beat","wav"]
+  return `audio/${toSlug(base)}-${hash.slice(0,6)}.${ext.toLowerCase()}`;
+}
+
+function toSlug(str){
+  return str
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // accenti → ascii
+    .replace(/[^\w\s-]/g,'')                         // via simboli
+    .trim().replace(/\s+/g,'-')                      // spazi → -
+    .toLowerCase();
+}
+
 async function uploadMp3ViaNetlify(file){
   /* 1️⃣  hash + start a production deploy */
   const buf  = await file.arrayBuffer();
   const hash = await sha1hex(buf);
-  const key  = `audio/${file.name}`;               // path inside your site
+  const key  = makeKey(file.name, hash);         // path inside your site
 
   const deploy = await fetch(
     `https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys?production=true`,
@@ -38,7 +58,7 @@ async function uploadMp3ViaNetlify(file){
 
   /* 2️⃣  Netlify says which hashes it still needs */
   if (deploy.required && deploy.required.includes(hash)){
-    const safePath = `audio/${encodeURIComponent(file.name)}`; // encode filename only
+    const safePath = key;   // è già “safe”
     const putURL   = `https://api.netlify.com/api/v1/deploys/${deploy.id}/files/${safePath}`;
 
     const put = await fetch(putURL, {
@@ -53,7 +73,7 @@ async function uploadMp3ViaNetlify(file){
   }
 
   /* 3️⃣  done — give back the playable URL */
-  return `https://${NETLIFY_URL}/audio/${encodeURIComponent(file.name)}`;
+  return `https://${NETLIFY_URL}/${key}`;
 }
 
 async function initApp() {
@@ -177,6 +197,7 @@ async function initApp() {
             li.querySelector('.edit-btn').addEventListener('click', async e => {
                 e.stopPropagation();
                 form['beat-name'].value = b.name;
+                titleEl.innerText = b.name;
                 form['beat-date'].value = b.date ? b.date.split('T')[0] : '';
                 document.getElementById('beat-rating').value = b.rating;
                 document.getElementById('beat-tag').value = b.tag;
@@ -228,7 +249,8 @@ async function initApp() {
         if (!file) return;
         nameInput.value = file.name.replace(/\.[^/.]+$/, '');
         titleEl.innerText = nameInput.value;
-        dateInput.value = new Date().toISOString().split('T')[0];
+        const mTime = new Date(file.lastModified || Date.now());
+        dateInput.value = mTime.toISOString().split('T')[0];
     });
 
     btnLibrary.addEventListener('click', () => {
@@ -283,6 +305,7 @@ async function initApp() {
         }
 
         document.getElementById('beat-name').value = text;
+        
         if (!name || !date) return;
         let fileURL = null;
         const file = form['beat-file'].files[0];
